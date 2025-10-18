@@ -1,4 +1,9 @@
-import { BadRequestException, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common'
+import {
+	BadRequestException,
+	Injectable,
+	NotFoundException,
+	UnauthorizedException
+} from '@nestjs/common'
 import { UserService } from '../user/user.service'
 import { JwtService } from '@nestjs/jwt'
 import { PrismaService } from '../prisma.service'
@@ -9,20 +14,20 @@ import { ConfigService } from '@nestjs/config'
 
 @Injectable()
 export class AuthService {
-
 	EXPIRE_DAY_REFRESH_TOKEN = 1
 	REFRESH_TOKEN_NAME = 'refreshToken'
 
-	constructor(private jwt: JwtService,
-				private userService: UserService,
-				private prisma: PrismaService,
-				private configService: ConfigService) {
-	}
+	constructor(
+		private jwt: JwtService,
+		private userService: UserService,
+		private prisma: PrismaService,
+		private configService: ConfigService
+	) {}
 
 	async login(dto: AuthDto) {
 		const user = await this.validateUser(dto)
 		const tokens = this.issueTokens(user.id)
-		return {user, ...tokens}
+		return { user, ...tokens }
 	}
 
 	async register(dto: AuthDto) {
@@ -31,7 +36,7 @@ export class AuthService {
 
 		const user = await this.userService.create(dto)
 		const tokens = this.issueTokens(user.id)
-		return {user, ...tokens}
+		return { user, ...tokens }
 	}
 
 	async getNewTokens(refreshToken: string) {
@@ -40,15 +45,15 @@ export class AuthService {
 
 		const user = await this.userService.getById(result.id)
 		const tokens = this.issueTokens(user!.id)
-		return {user, ...tokens}
+		return { user, ...tokens }
 	}
 
 	issueTokens(userId: string) {
-		const data = {id: userId}
-		const accessToken = this.jwt.sign(data, {expiresIn: '1h'})
-		const refreshToken = this.jwt.sign(data, {expiresIn: '7d'})
+		const data = { id: userId }
+		const accessToken = this.jwt.sign(data, { expiresIn: '1h' })
+		const refreshToken = this.jwt.sign(data, { expiresIn: '7d' })
 
-		return {accessToken, refreshToken}
+		return { accessToken, refreshToken }
 	}
 
 	private async validateUser(dto: AuthDto) {
@@ -57,6 +62,30 @@ export class AuthService {
 		if (!user) throw new NotFoundException('User not found')
 
 		return user
+	}
+
+	async validateOAuthLogin(req: any) {
+		// eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+		let user = await this.userService.getByEmail(req.user.email)
+
+		if (!user) {
+			user = await this.prisma.user.create({
+				data: {
+					email: req.user.email,
+					name: req.user.name,
+					picture: req.user.picture,
+				},
+				include: {
+					stores: true,
+					favorites: true,
+					orders: true
+				}
+			})
+		}
+
+		const tokens = this.issueTokens(user.id)
+
+		return { user, ...tokens}
 	}
 
 	addRefreshTokenToResponse(res: Response, refreshToken: string) {
@@ -69,19 +98,16 @@ export class AuthService {
 			domain: this.configService.get('SERVER_DOMAIN'),
 			secure: true,
 			sameSite: 'none'
-			}
-		)
+		})
 	}
 
 	removeRefreshTokenFromResponse(res: Response) {
-
 		res.cookie(this.REFRESH_TOKEN_NAME, '', {
-				expires: new Date(0),
-				httpOnly: true,
-				domain: this.configService.get('SERVER_DOMAIN'),
-				secure: true,
-				sameSite: 'none'
-			}
-		)
+			expires: new Date(0),
+			httpOnly: true,
+			domain: this.configService.get('SERVER_DOMAIN'),
+			secure: true,
+			sameSite: 'none'
+		})
 	}
 }
