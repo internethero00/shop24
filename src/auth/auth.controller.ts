@@ -62,12 +62,12 @@ export class AuthController {
 
   @Get('google')
   @UseGuards(AuthGuard('google'))
-  async googleAuth() {
+  async googleAuth(@Req() req) {
   }
 
   @Get('google/callback')
   @UseGuards(AuthGuard('google'))
-  async googleAuthCallback(@Req() req: any, @Res({ passthrough: true }) res: Response) {
+  async googleAuthCallback(@Req() req, @Res({ passthrough: true }) res: Response) {
     const { refreshToken, ...response } = await this.authService.validateOAuthLogin(req)
     this.authService.addRefreshTokenToResponse(res, refreshToken)
     return res.redirect(`${process.env['CLIENT_URL']}/dashboard?accessToken=${response.accessToken}`)
@@ -76,12 +76,12 @@ export class AuthController {
 
   @Get('yandex')
   @UseGuards(AuthGuard('yandex'))
-  async yandexAuth() {
+  async yandexAuth(@Req() req) {
   }
 
   @Get('yandex/callback')
   @UseGuards(AuthGuard('yandex'))
-  async yandexAuthCallback(@Req() req: any, @Res({ passthrough: true }) res: Response) {
+  async yandexAuthCallback(@Req() req, @Res({ passthrough: true }) res: Response) {
     const { refreshToken, ...response } = await this.authService.validateOAuthLogin(req)
     this.authService.addRefreshTokenToResponse(res, refreshToken)
     return res.redirect(`${process.env['CLIENT_URL']}/dashboard?accessToken=${response.accessToken}`)
