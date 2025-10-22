@@ -6,7 +6,7 @@ export class ColorService {
 	constructor(private prisma: PrismaService) {}
 
 	async getByStoreId(storeId: string) {
-		return this.prisma.colore.findMany({
+		return this.prisma.color.findMany({
 			where: {
 				storeId
 			}
@@ -14,7 +14,7 @@ export class ColorService {
 	}
 
 	async getById(id: string) {
-		const color = await this.prisma.colore.findUnique({
+		const color = await this.prisma.color.findUnique({
 			where: {
 				id
 			}
@@ -26,7 +26,7 @@ export class ColorService {
 	}
 
 	async create(storeId: string,dto: ColorDto) {
-		return this.prisma.colore.create({
+		return this.prisma.color.create({
 			data: {
 				...dto,
 				storeId
@@ -36,7 +36,7 @@ export class ColorService {
 
 	async update(id: string, dto: ColorDto) {
 		await this.getById(id)
-		return this.prisma.colore.update({
+		return this.prisma.color.update({
 			where: {
 				id,
 			},
@@ -47,7 +47,7 @@ export class ColorService {
 	}
 	async delete(id: string) {
 		await this.getById(id)
-		return this.prisma.colore.delete({
+		return this.prisma.color.delete({
 			where: {
 				id
 			}
